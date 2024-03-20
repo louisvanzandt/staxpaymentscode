@@ -14,117 +14,120 @@
 
 #include <iostream>
 
-// Node class definition
-class Node {
-public:
-    int data;
-    Node* next;
 
-    // Constructor
-    Node(int value) : data(value), next(nullptr) {}
+template <typename T>
+struct Node {
+    T data;
+    Node<T>* prev;
+    Node<T>* next;
+
+    Node(const T& newData) : data(newData), prev(nullptr), next(nullptr) {}
 };
 
-// Linked list class definition
-class LinkedList {
+
+template <typename T>
+class DoubleLinkedList {
 private:
-    Node* head;
+    Node<T>* head;
+    Node<T>* tail;
+    int size;
 
 public:
-    // Constructor
-    LinkedList() : head(nullptr) {}
+    DoubleLinkedList () : head(nullptr), tail(nullptr), size(0) {}
 
-    // Destructor
-    ~LinkedList() {
+    ~DoubleLinkedList () {
         while (head != nullptr) {
-            Node* temp = head;
+            Node<T>* temp = head;
             head = head->next;
             delete temp;
         }
     }
 
-    // Method to add a node at the end of the list
-    void addNode(int value) {
-        Node* newNode = new Node(value);
+    void addNode(const T& newData) {
+        Node<T>* newNode = new Node<T>(newData);
         if (head == nullptr) {
-            head = newNode;
+            head = tail = newNode;
         } else {
-            Node* temp = head;
-            while (temp->next != nullptr) {
-                temp = temp->next;
-            }
-            temp->next = newNode;
+            tail->next = newNode;
+            newNode->prev = tail;
+            tail = newNode;
         }
+        size++;
     }
 
-    // Method to delete a node from the list
-    void deleteNode(int value) {
-        if (head == nullptr) {
-            std::cout << "Empty list!\n";
-            return;
-        }
-
-        if (head->data == value) {
-            Node* temp = head;
-            head = head->next;
-            delete temp;
-            return;
-        }
-
-        Node* prev = head;
-        Node* curr = head->next;
-        while (curr != nullptr) {
-            if (curr->data == value) {
-                prev->next = curr->next;
-                delete curr;
+    void deleteNode(const T& dataToRemove) {
+        Node<T>* current = head;
+        while (current != nullptr) {
+            if (current->data == dataToRemove) {
+                if (current == head && current == tail) {
+                    head = tail = nullptr;
+                } else if (current == head) {
+                    head = head->next;
+                    head->prev = nullptr;
+                } else if (current == tail) {
+                    tail = tail->prev;
+                    tail->next = nullptr;
+                } else {
+                    current->prev->next = current->next;
+                    current->next->prev = current->prev;
+                }
+                delete current;
+                size--;
                 return;
             }
-            prev = curr;
-            curr = curr->next;
+            current = current->next;
         }
-
-        std::cout << "No such value!\n";
+        std::cout << "Node with data " << dataToRemove << " not found in the list." << std::endl;
     }
 
-    // Output list contents
-    void display() {
-        Node* temp = head;
-        while (temp != nullptr) {
-            std::cout << temp->data << " ";
-            temp = temp->next;
+    void displayForward() {
+        Node<T>* current = head;
+        while (current != nullptr) {
+            std::cout << current->data << " ";
+            current = current->next;
         }
         std::cout << std::endl;
     }
+
+    void displayBackward() {
+        Node<T>* current = tail;
+        while (current != nullptr) {
+            std::cout << current->data << " ";
+            current = current->prev;
+        }
+        std::cout << std::endl;
+    }
+
+    int getSize() {
+        return size;
+    }
 };
 
-int main() 
-{
-    LinkedList list;
+// Main function for Unit testing
+int main() {
+    DoubleLinkedList <int> myList;
 
-    // Unit Testing #1. Adding nodes to the list
-    list.addNode(100);
-    list.addNode(200);
-    list.addNode(300);
-    list.addNode(400);
-    list.addNode(500);
-
-
-    // output default list
-    std::cout << "Output of Unit Testing #1 Adding nodes to the list-> ";
-    list.display();
-
-    //  Unit Testing #2. Delete a note
-    list.deleteNode(300);
+    myList.addNode(100);
+    myList.addNode(200);
+    myList.addNode(300);
+    myList.addNode(400);
+    myList.addNode(500);
 
 
-    std::cout << "Output of Unit Testing #2 Deleting a node from the list-> ";
-    list.display();
+    std::cout << "List forward: ";
+    myList.displayForward();
 
-    //  Unit Testing #3. Adding a node to the list
-    list.addNode(600);
+    std::cout << "List backward: ";
+    myList.displayBackward();
 
-    std::cout << "Output of Unit Testing #3 Adding a node to the list-> ";
-    list.display();
+    myList.deleteNode(300);
 
+    std::cout << "List after removing 300: ";
+    myList.displayForward();
+
+    std::cout << "List size: " << myList.getSize() << std::endl;
 
     return 0;
 }
+
+
